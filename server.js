@@ -27,6 +27,23 @@ io.on('connection', function(socket){
 		socket.emit("initIdentity", 'p4');
 	}
 
+	socket.on('outgoingBallUpdate', function(x, y){
+		io.emit('incomingBallUpdate', x, y);
+	})
+
+	socket.on('outgoingPaddle1Update', function(x,y){
+		io.emit('incomingPaddle1Update', x, y);
+	});
+	socket.on('outgoingPaddle2Update', function(x,y){
+		io.emit('incomingPaddle2Update', x, y);
+	});
+	socket.on('outgoingPaddle3Update', function(x,y){
+		io.emit('incomingPaddle3Update', x, y);
+	});
+	socket.on('outgoingPaddle4Update', function(x,y){
+		io.emit('incomingPaddle4Update', x, y);
+	});
+
 	socket.on('disconnect', function(){
 		connectedUsers.splice(connectedUsers.indexOf(socket.id));
 		console.log("A user disconnected");

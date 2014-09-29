@@ -93,14 +93,17 @@
 					this.dy *= -1;
 				}
 				
-				if(this.x < 80 && this.y - 10 > paddle1.y && this.y + 60 < paddle1.y + 80){this.dx *= -1;}
-				if(this.x > 720 && this.y - 10 > paddle2.y && this.y + 60 < paddle2.y + 80){this.dx *= -1;}
+				// if(){this.dx *= -1;}
+				// if(){this.dx *= -1;}
 
-				if(this.x > paddle3.x && this.x < paddle3.x + 80 && this.y < paddle3.y + 40){this.dy *= -1;}
-				if(this.x > paddle4.x && this.x < paddle4.x + 80 && this.y+50 > paddle4.y){this.dy *= -1;}
+				// if(){this.dy *= -1;}
+				// if(){this.dy *= -1;}
 
 				this.x += this.dx * delta;
 				this.y += this.dy * delta;
+				if(name === "p1"){
+					socket.emit('outgoingBallUpdate', this.x, this.y);
+				}
 			};
 			Ball.prototype.draw = function(ctx) {
 				ctx.beginPath();
@@ -159,6 +162,15 @@
 				if(this.y < -100){
 					this.y = 800;
 				}
+				if(this.name === "paddle1"){
+					socket.emit('outgoingPaddle1Update', this.x, this.y);
+				}else if(this.name === "paddle2"){
+					socket.emit('outgoingPaddle2Update', this.x, this.y);
+				}else if(this.name === "paddle3"){
+					socket.emit('outgoingPaddle3Update', this.x, this.y);
+				}else if(this.name === "paddle4"){
+					socket.emit('outgoingPaddle4Update', this.x, this.y);
+				}
 			};
 			Paddle.prototype.draw = function(ctx) {
 				ctx.beginPath();
@@ -175,6 +187,37 @@
 			var paddle2 = new Paddle(canvas.width - 80, (canvas.height/2)-40, "paddle2");
 			var paddle3 = new Paddle((canvas.width/2)-40, 40, "paddle3");
 			var paddle4 = new Paddle((canvas.width/2)-40, canvas.height-80, "paddle4");
+
+			socket.on('incomingBallUpdate', function(x, y){
+				if(!(name === "p1")){
+					ball.x = x;
+					ball.y = y;
+				}
+			});
+			socket.on('incomingPaddle1Update', function(x,y){
+				if(!(name === "p1")){
+					paddle1.x = x;
+					paddle1.y = y;
+				}
+			});
+			socket.on('incomingPaddle2Update', function(x,y){
+				if(!(name === "p2")){
+					paddle2.x = x;
+					paddle2.y = y;
+				}
+			});
+			socket.on('incomingPaddle3Update', function(x,y){
+				if(!(name === "p3")){
+					paddle3.x = x;
+					paddle3.y = y;
+				}
+			});
+			socket.on('incomingPaddle4Update', function(x,y){
+				if(!(name === "p4")){
+					paddle4.x = x;
+					paddle4.y = y;
+				}
+			});
 
 			var main = function(){
 				var now = Date.now();
