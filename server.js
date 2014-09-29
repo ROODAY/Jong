@@ -27,8 +27,8 @@ io.on('connection', function(socket){
 		socket.emit("initIdentity", 'p4');
 	}
 
-	socket.on('outgoingBallUpdate', function(x, y){
-		io.emit('incomingBallUpdate', x, y);
+	socket.on('outgoingBallUpdate', function(x, y, dx, dy){
+		io.emit('incomingBallUpdate', x, y, dx, dy);
 	})
 
 	socket.on('outgoingPaddle1Update', function(x,y){
