@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Jong</title>
+	</head>
+
+	<body>
+		<canvas id="game"></canvas>
+		<script src="/socket.io/socket.io.js"></script>
+		<script>
+			var socket = io();
+			var canvas = document.getElementById("game");
+			var context = canvas.getContext("2d");
+			canvas.width = 800;
+			canvas.height = 800;
+			context.beginPath();
+			var keysDown = {};
+			var name;
+
+			document.addEventListener('keydown', function(e){
+				keysDown[e.keyCode] = true;
+			},false);
+			document.addEventListener('keyup', function(e){
+				delete keysDown[e.keyCode];
+			},false);
+
+			socket.on('initIdentity', function(n){
+				name = n;
+			});
+			console.log(name);
+
+
+			Ball = function(x, y, dx, dy){
+				this.x = x;
+				this.y = y;
+				this.dx = dx;
+				this.dy = dy; 
+			};
+			Ball.prototype.update = function(delta) {
+				if(this.x < 0){
+					this.dx *= -1;
+				}
+				if(this.x + 50 > 800){
+					this.dx *= -1;
+				}
+				if(this.y < 0){
+					this.dy *= -1;
+				}
+				if(this.y + 50 > 800){
+					this.dy *= -1;
+				}
+				
+				if(this.x < 80 && this.y - 10 > paddle1.y && this.y + 60 < paddle1.y + 80){this.dx *= -1;}
+				if(this.x > 720 && this.y - 10 > paddle2.y && this.y + 60 < paddle2.y + 80){this.dx *= -1;}
+
+				if(this.x > paddle3.x && this.x < paddle3.x + 80 && this.y < paddle3.y + 40){this.dy *= -1;}
+				if(this.x > paddle4.x && this.x < paddle4.x + 80 && this.y+50 > paddle4.y){this.dy *= -1;}
+
+				this.x += this.dx * delta;
+				this.y += this.dy * delta;
+			};
+			Ball.prototype.draw = function(ctx) {
+				ctx.beginPath();
+				ctx.strokeStyle = "white";
+				ctx.arc(this.x + 25, this.y + 25, 25, 0,2*Math.PI);
+				ctx.stroke();
+			};
+
+			Paddle = function(x, y, name){
+				this.x = x;
+				this.y = y;
+				this.name = name
+			}
+			Paddle.prototype.update = function(delta) {
+				if(37 in keysDown){
+					if(name === "p3"){
+						this.x -= 200 * delta;
+					}
+					if(name === "p4"){
+						this.x -= 200 * delta;
+					}
+				};//left
+				if(38 in keysDown){
+					if(name === "p1"){
+						this.y -= 200 * delta;
+					}
+					if(name === "p2"){
+						this.y -= 200 * delta;
+					}
+				};//up
+				if(39 in keysDown){
+					if(name === "p3"){
+						this.x += 200 * delta;
+					}
+					if(name === "p4"){
+						this.x += 200 * delta;
+					}
+				};//right
+				if(40 in keysDown){
+					if(name === "p1"){
+						this.y += 200 * delta;
+					}
+					if(name === "p2"){
+						this.y += 200 * delta;
+					}
+				};//down
+				if(this.x > 800){
+					this.x = 0 - 20;
+				}
+				if(this.x < 0 - 20){
+					this.x = 800;
+				}
+				if(this.y > 800){
+					this.y = 0 - 20;
+				}
+				if(this.y < 0 - 20){
+					this.y = 800;
+				}
+			};
+			Paddle.prototype.draw = function(ctx) {
+				ctx.beginPath();
+				ctx.fillStyle="white";
+				if(this.name === "paddle1" || this.name === "paddle2"){
+					ctx.fillRect(this.x, this.y, 40, 80);
+				}else if(this.name === "paddle3" || this.name === "paddle4"){
+					ctx.fillRect(this.x, this.y, 80, 40);
+				}
+			};
+
+			var ball = new Ball(400,400,-300,300);
+			var paddle1 = new Paddle(40, (canvas.height/2)-40, "paddle1");
+			var paddle2 = new Paddle(canvas.width - 80, (canvas.height/2)-40, "paddle2");
+			var paddle3 = new Paddle((canvas.width/2)-40, 40, "paddle3");
+			var paddle4 = new Paddle((canvas.width/2)-40, canvas.height-80, "paddle4");
+
+			var main = function(){
+				var now = Date.now();
+				var delta = now - then;
+
+				update(delta/1000);
+				render();
+
+				then = now;
+				requestAnimationFrame(main);
+			};
+			var update = function(delta){
+				ball.update(delta);
+				if(name === "p1"){
+					paddle1.update(delta);
+				}
+				if(name === "p2"){
+					paddle2.update(delta);
+				}
+				if(name === "p3"){
+					paddle3.update(delta);
+				}
+				if(name === "p4"){
+					paddle4.update(delta);
+				}
+
+			};
+			var render = function(){
+				context.beginPath();
+				context.fillStyle="black";
+				context.fillRect(0,0,canvas.width,canvas.height);
+
+				ball.draw(context);
+				paddle1.draw(context);
+				paddle2.draw(context);
+				paddle3.draw(context);
+				paddle4.draw(context);
+			};
+
+			then = Date.now();
+			main();
+		</script>
+	</body>
+</html>

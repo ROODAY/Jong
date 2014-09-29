@@ -1,0 +1,9 @@
+{
+	"name":"Jong",
+	"description":"Four player pong over socket.io",
+	"version": "1.0.0",
+	"dependencies": {
+	    "express": "^4.9.4",
+	    "socket.io": "^1.1.0"
+  	}
+}
