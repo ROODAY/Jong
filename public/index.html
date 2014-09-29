@@ -56,9 +56,15 @@
 			var context = canvas.getContext("2d");
 			canvas.width = 800;
 			canvas.height = 800;
-			context.beginPath();
 			var keysDown = {};
 			var name;
+
+			context.beginPath();
+			context.strokeStyle = "#39FF14";
+			context.rect(0,0,800,800);
+			context.stroke();
+			context.closePath();
+
 
 			document.addEventListener('keydown', function(e){
 				keysDown[e.keyCode] = true;
@@ -250,7 +256,7 @@
 			var render = function(){
 				context.beginPath();
 				context.fillStyle="black";
-				context.fillRect(0,0,canvas.width,canvas.height);
+				context.fillRect(1,1,canvas.width-2,canvas.height-2);
 
 				ball.draw(context);
 				paddle1.draw(context);
