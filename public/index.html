@@ -28,12 +28,11 @@
 				background-color: black;
 				overflow: none;
 				font-size: 1rem;
+				font-family: 'Audiowide', sans-serif;
+				color: #39FF14;
 			}
 			h1 {
 				text-align: center;
-				font-family: 'Audiowide', sans-serif;
-				font-size: 3rem;
-				color: #39FF14;
 			}
 			canvas {
 			    padding-left: 0;
@@ -44,26 +43,86 @@
 			    width: 800px;
 			    height: 800px;
 			}
+			h2 {
+				position: absolute;
+				font-size: 3rem;
+			}
+			#leftplayers {
+				left: 5;
+			}
+			#rightplayers {
+				right: 5;
+			}
+			#p1 {
+				top: 5;
+			}
+			#p2 {
+				top: 500;
+			}
+			#p3 {
+				top: 5;
+			}
+			#p4 {
+				top: 500;
+			}
 		</style>
 	</head>
 	<body>
 		<h1>Jong</h1>
+		<div id="leftplayers">
+			<h2 id="p1"></h2>
+			<h2 id="p2"></h2>
+		</div>
+		<div id="rightplayers">
+			<h2 id="p3"></h2>
+			<h2 id="p4"></h2>
+		</div>
 		<canvas id="game"></canvas>
 		<script src="/socket.io/socket.io.js"></script>
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+        <script>window.jQuery || document.write('<script src="jquery.js"><\/script>')</script>
 		<script>
 			var socket = io();
 			var canvas = document.getElementById("game");
 			var context = canvas.getContext("2d");
+			var clientWidth = document.documentElement.clientWidth;
+			var clientHeight = document.documentElement.clientHeight;
 			canvas.width = 800;
 			canvas.height = 800;
 			var keysDown = {};
 			var name;
+			var starting = false;
+			var paused = true;
+			var timer = 3;
+			var totalplayers = 0;
+			var names = ["","","",""];
+
+			$("#p2").css("top", clientHeight / 2);
+			$("#p4").css("top", clientHeight / 2);
 
 			context.beginPath();
 			context.strokeStyle = "#39FF14";
 			context.rect(0,0,800,800);
 			context.stroke();
 			context.closePath();
+
+			var runTimer = function() {
+				console.log("runTimer initiated");
+				var time = 3;
+				socket.emit('updateTimer', time);
+				setTimeout(function(){
+					time = 2;
+					socket.emit('updateTimer', time);
+					setTimeout(function(){
+						time = 1;
+						socket.emit('updateTimer', time);
+						setTimeout(function(){
+							socket.emit('startGame',time);
+							console.log("sent startgame hook");
+						}, 1000);
+					}, 1000);
+				}, 1000);
+			}
 
 
 			document.addEventListener('keydown', function(e){
@@ -75,9 +134,43 @@
 
 			socket.on('initIdentity', function(n){
 				name = n;
+				var realname = prompt("Enter your name please");
+				var index = Number(name.slice(1))
+				names[index] = realname;
+				socket.emit("updateNames", names);
+				console.log(name);
 			});
-			console.log(name);
+			socket.on("totalPlayers", function(num){
+				totalplayers = num;
+			});
+			socket.on("updateNames", function(arr){
+				names = arr;
+				for (var i = 0; i < names.length; i++){
+					if (names[i] !== undefined && names[i] !== null) {
+						var selector = "#p" + (i + 1);
+						$(selector).html(names[i]);
+					}
+				}
+			});
 
+			socket.on('startTimer', function(b){
+				console.log("start timer initiated");
+				starting = true;
+				if (name === "p1") {
+					runTimer();
+				}
+			});
+			socket.on('updateTimer', function(t){
+				timer = t;
+				console.log("updated timer, timer = " + timer);
+			});
+			socket.on("startGame", function(t){
+				if (t <= 1) {
+					starting = false;
+					paused = false;
+					console.log("game started");
+				}
+			})
 
 			Ball = function(x, y, dx, dy){
 				this.x = x;
@@ -238,20 +331,22 @@
 				requestAnimationFrame(main);
 			};
 			var update = function(delta){
-				ball.update(delta);
-				if(name === "p1"){
-					paddle1.update(delta);
+				if (!paused && !starting) {
+					console.log("Paused = " + paused + ", starting = " + starting);
+					ball.update(delta);
+					if(name === "p1"){
+						paddle1.update(delta);
+					}
+					if(name === "p2"){
+						paddle2.update(delta);
+					}
+					if(name === "p3"){
+						paddle3.update(delta);
+					}
+					if(name === "p4"){
+						paddle4.update(delta);
+					}
 				}
-				if(name === "p2"){
-					paddle2.update(delta);
-				}
-				if(name === "p3"){
-					paddle3.update(delta);
-				}
-				if(name === "p4"){
-					paddle4.update(delta);
-				}
-
 			};
 			var render = function(){
 				context.beginPath();
@@ -263,6 +358,16 @@
 				paddle2.draw(context);
 				paddle3.draw(context);
 				paddle4.draw(context);
+
+				context.font = '50pt "Audiowide"';
+				context.fillStyle = "#39FF14";
+					context.textAlign = "center";
+				if (!starting && paused) {
+					context.fillText("Waiting for " + (4 - totalplayers) + " Players", canvas.width / 2, canvas.height * .25);
+				} else if (starting && paused) {
+					console.log(timer);
+					context.fillText(timer, canvas.width / 2, canvas.height / 2);
+				}
 			};
 
 			then = Date.now();

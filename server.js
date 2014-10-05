@@ -13,6 +13,7 @@ var connectedUsers = [];
 io.on('connection', function(socket){
 	console.log("A user connected");
 	connectedUsers.push(socket.id);
+	io.emit("totalPlayers", connectedUsers.length);
 
 	if(connectedUsers.length == 1){
 		socket.emit('initIdentity', 'p1')
@@ -25,11 +26,23 @@ io.on('connection', function(socket){
 	}
 	if(connectedUsers.length == 4){
 		socket.emit("initIdentity", 'p4');
+		io.emit("startTimer", true);
 	}
+
+	socket.on("updateNames", function(arr){
+		io.emit("updateNames", arr);
+	});
+
+	socket.emit("updateTimer", function(t){
+		io.emit("updateTimer", t);
+	});
+	socket.emit("startGame", function(b){
+		io.emit("startGame", b);
+	});
 
 	socket.on('outgoingBallUpdate', function(x, y, dx, dy){
 		io.emit('incomingBallUpdate', x, y, dx, dy);
-	})
+	});
 
 	socket.on('outgoingPaddle1Update', function(x,y){
 		io.emit('incomingPaddle1Update', x, y);
@@ -45,7 +58,7 @@ io.on('connection', function(socket){
 	});
 
 	socket.on('disconnect', function(){
-		connectedUsers.splice(connectedUsers.indexOf(socket.id));
+		connectedUsers.splice(connectedUsers.indexOf(socket.id), 1);
 		console.log("A user disconnected");
 	});
 })
